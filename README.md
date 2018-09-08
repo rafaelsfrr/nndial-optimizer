@@ -12,5 +12,6 @@ Para instalá-las, basta executar:
 
 ## Estrutura do diretório
 `optimizer` -> Módulo do algoritmo genético
+
 `notebooks` -> Módulo principal onde vamos chamar toda a estrutura de treinamento e execução da rede
 Todos os outros módulos e arquivos são referentes ao NNDIAL.
