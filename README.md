@@ -10,6 +10,11 @@ Para instalá-las, basta executar:
 
 `conda install --file requirements.txt`
 
+## Variáveis de ambiente
+Defina a variável de ambiente
+
+`THEANO_FLAGS = optimizer=fast_compile,device=cuda*,floatX=float32`
+
 ## Estrutura do diretório
 `optimizer` -> Módulo do algoritmo genético
 
