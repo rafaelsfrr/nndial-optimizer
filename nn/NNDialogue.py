@@ -436,6 +436,9 @@ class NNDial(object):
                     if set(reqs).issuperset(set(goal[1].nonzero()[0].tolist())):
                         stats['success'] += 1.0
 
+        # bleu score
+        bleu = bscorer.score(best_corpus)
+
         # evaluation result
         print 80*'#'
         print 35*'#' + '  Metrics ' + 35*'#'
@@ -443,7 +446,7 @@ class NNDial(object):
         print 'Venue Match Rate     : %.1f%%' % (100*stats['vmc']/float(len(testset)))
         print 'Task Success Rate    : %.1f%%' % (100*stats['success']/float(len(testset)))
         if self.dec!='none':
-            print 'BLEU                 : %.4f' % (bscorer.score(best_corpus))
+            print 'BLEU                 : %.4f' % (bleu)
             print 'Semantic Match       : %.1f%%' % (100*stats['approp'][0]/stats['approp'][1])
         print 35*'#' + ' Trackers ' + 35*'#'
         print '---- Informable  '+ 63*'-'
@@ -488,6 +491,8 @@ class NNDial(object):
         print '%12s :\t| %7s\t| %7s\t| %7s\t| %7s\t|' %\
                 ('Metrics', 'Prec.', 'Recall', 'F-1', 'Acc.')
         print 80*'#'
+
+        return bleu
 
     def trainNet(self): 
 
