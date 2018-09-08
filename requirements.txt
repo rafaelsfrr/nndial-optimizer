@@ -1,0 +1,6 @@
+theano
+numpy
+scipy
+nltk
+simplejson
+deap
