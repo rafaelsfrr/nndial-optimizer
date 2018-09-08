@@ -4,3 +4,4 @@ scipy
 nltk
 simplejson
 deap
+nose
