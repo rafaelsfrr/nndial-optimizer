@@ -6,3 +6,4 @@ simplejson
 deap
 nose
 configparser
+nb_conda
