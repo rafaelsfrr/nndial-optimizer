@@ -3,21 +3,14 @@
 #  Copyright Tsung-Hsien Wen, Cambridge Dialogue Systems Group, 2017 #
 ######################################################################
 ######################################################################
-import os
 import re
 import sys
 import simplejson as json
-import math
 import operator
 import random
-from pprint import pprint
-import itertools
 import numpy as np
 from copy import deepcopy
-from pprint import pprint
-
 from utils.nlp import normalize
-from utils.tools import findSubList
 from nltk.corpus import stopwords
 from nltk.stem.wordnet import WordNetLemmatizer
 

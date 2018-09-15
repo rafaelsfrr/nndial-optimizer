@@ -3,16 +3,9 @@
 #  Copyright Tsung-Hsien Wen, Cambridge Dialogue Systems Group, 2017 #
 ######################################################################
 ######################################################################
-
-import os
-import json
 import sys
-import operator
 import re
-#import enchant
-from tools import levenshtein
 sys.path.append('./loader/')
-#from DataMasker import DataMasker
 
 fin = file('utils/nlp/mapping.pair')
 replacements = []

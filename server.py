@@ -62,7 +62,7 @@ class ChatHandler(BaseHTTPRequestHandler):
 if __name__ == '__main__':
     # TODO: IP address and port
     hostname = 'xxx.xxx.xxx.xxx'
-    port = ????
+    port = 8080
 
     # loading neural dialog model
     args = NNSDSOptParser()

@@ -4,30 +4,16 @@
 ######################################################################
 ######################################################################
 import theano
-import numpy as np
-import os
-import operator
-from math import log, log10, exp, pow
-from copy import deepcopy
-import sys
-import random
+from math import log10
 import time
-import itertools
 import pickle as pk
 from ast import literal_eval
 import gc
-
 from nnsds import NNSDS
-
-from utils.tools import setWordVector
-from utils.nlp import normalize
 from utils.bleu import sentence_bleu_4
-
 from loader.DataReader import *
 from loader.GentScorer import *
-
 from ConfigParser import SafeConfigParser
-
 from api.Interact import Interact
 
 theano.gof.compilelock.set_lock_status(False)
