@@ -8,16 +8,18 @@ import theano
 import theano.tensor as T
 from utils.mathUtil import softmax, sigmoid, tanh
 
-# gradient clipping 
+
+# gradient clipping
 class GradClip(theano.compile.ViewOp):
     def __init__(self, clip_lower_bound, clip_upper_bound):
         self.clip_lower_bound = clip_lower_bound
         self.clip_upper_bound = clip_upper_bound
-        assert(self.clip_upper_bound >= self.clip_lower_bound)
+        assert (self.clip_upper_bound >= self.clip_lower_bound)
 
     def grad(self, args, g_outs):
-        return [T.clip(g_out, self.clip_lower_bound, self.clip_upper_bound) 
+        return [T.clip(g_out, self.clip_lower_bound, self.clip_upper_bound)
                 for g_out in g_outs]
+
 
 def clip_gradient(x, bound):
     grad_clip = GradClip(-bound, bound)
@@ -33,7 +35,7 @@ def clip_gradient(x, bound):
 class BaseNNModule(object):
 
     # default parameters manipulation functions
-    def setParams(self,params):
+    def setParams(self, params):
         for i in range(len(self.params)):
             self.params[i].set_value(params[i])
 
@@ -42,6 +44,3 @@ class BaseNNModule(object):
 
     def numOfParams(self):
         return sum([p.get_value().size for p in self.params])
-
-
-

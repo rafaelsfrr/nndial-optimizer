@@ -18,7 +18,7 @@ if __name__ == '__main__':
     config = args.config
 
     model = NNDial(config,args)
-    if args.mode=='train' or args.mode=='adjust': 
+    if args.mode=='train' or args.mode=='adjust':
         model.trainNet()    
     elif args.mode=='test' or args.mode=='valid':
         model.testNet()
