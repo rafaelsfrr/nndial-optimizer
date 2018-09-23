@@ -1,6 +1,7 @@
 import configparser
 import shutil
-
+import os
+import argparse
 
 def load_config_file(path, section):
     """
@@ -40,3 +41,21 @@ def move_file(file_init, file_final):
     :return: none
     """
     shutil.copyfile(file_init, file_final)
+
+
+def remove_file(path):
+    """
+    :param path: the of the file to be removed
+    :return: none
+    """
+    os.remove(path)
+
+
+def make_args(config, mode):
+    """
+    :param config: the config file
+    :param mode: the mode
+    :return: the args namespace
+    """
+
+    return argparse.Namespace(config=config, mode=mode)
