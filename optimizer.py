@@ -2,31 +2,6 @@ from nn.NNDialogue import NNDial
 from optimizer import util
 from optimizer import ga
 import time
-import shutil
-import os
-import argparse
-
-# Entao, o jeito que os caras fizeram foi bem lixo, basicamente eles pegam o arquivo que representa o belief tracker
-# treinado e jogam em um arquivo model/CamRest.NDM.model
-# depois eh so rodar
-#     model = NNDial('adjust', 'config/NDM.cfg')
-#     model.trainNet()
-# Isso vai treinar o resto da rede. O que vai acontecer eh que as outras redes vao ser escritas no mesmo arquivo
-# Depois eh so rodar
-# bleu = model.testNet()
-# Isso vai carregar de novo a rede e rodar o teste, retornando o bleu
-
-# O fluxo entao vai ser,
-# 0) a gente vai inicializar o algoritmo genetico com um vetor inicial de configuracoes
-# 1) a gente vai pegar o arquivo model/CamRest.tracker.model e copiar pra model/CamRest.NDM.model
-# 2)    model = NNDial('adjust', 'config/NDM.cfg')
-# #     model.trainNet()
-# 3)    model = NNDial('test', 'config/NDM.cfg')
-#       bleu = model.testNet()
-# 4)    o bleu vai cair no algoritmo genetico que vai estar em optimizer
-# 5)    o algoritmo vai gerar um vetor de configuracoes representando outra geracao
-# 6) Essas configuracoes vao ser escritas no arquivo config/NDM.cfg
-# 7) Volta ao passo 1
 
 
 if __name__ == '__main__':
@@ -66,8 +41,8 @@ if __name__ == '__main__':
         bleu_generation = []
         time_generation = []
         for individual in range(0, len(individuals)):
-            shutil.copyfile('model/CamRest.tracker.model', 'model/CamRest.NDM.model')
-            args = argparse.Namespace(config='config/NDM{}.cfg'.format(individual), mode='adjust')
+            util.move_file('model/CamRest.tracker.model', 'model/CamRest.NDM.model')
+            args = util.make_args('config/NDM{}.cfg'.format(individual), 'adjust')
             config = args.config
             time_init = time.time()
             model = NNDial(config, args)
@@ -76,11 +51,11 @@ if __name__ == '__main__':
             time_end = time.time()
             time_total = (time_end - time_init) / 60.0
             time_generation.append(time_total)
-            args = argparse.Namespace(config='config/NDM{}.cfg'.format(individual), mode='test')
+            args = util.make_args('config/NDM{}.cfg'.format(individual), 'test')
             config = args.config
             model = NNDial(config, args)
             bleu_generation.append(model.testNet())
-            os.remove('model/CamRest.NDM.model')
+            util.remove_file('model/CamRest.NDM.model')
 
         time_vec.append(time_generation)
         bleu.append(bleu_generation)
