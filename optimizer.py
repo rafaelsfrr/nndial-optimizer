@@ -1,6 +1,10 @@
 from nn.NNDialogue import NNDial
 from optimizer import util
 from optimizer import ga
+import time
+import shutil
+import os
+import argparse
 
 # Entao, o jeito que os caras fizeram foi bem lixo, basicamente eles pegam o arquivo que representa o belief tracker
 # treinado e jogam em um arquivo model/CamRest.NDM.model
@@ -33,36 +37,53 @@ if __name__ == '__main__':
     # get learn config params
     lr, lr_decay, _, _, l2, random_seed, _, _, _, _ = config
 
+    # define the number of generations
+    num_generations = 1
+
+    # define the number of individuals
+    num_individuals = 2
+
     # define chromosomes
     chromosomes = [float(lr), float(lr_decay), float(l2), int(random_seed)]
 
     # define chromosomes limits
-    limits = [[-0.01, 0.01], [0, 1], [0, 0.000001], [1, 8]]
+    limits = [[-0.0008, 0.0008], [-0.05, 0.05], [0, 0.0001], [1, 5]]
 
     # get first individuals
-    individuals = ga.init(4, chromosomes, limits)
+    individuals = ga.init(num_individuals, chromosomes, limits)
 
     # save each individual in a config file
     for i in range(0, len(individuals)):
         util.write_config_file(individuals[i], 'config/NDM{}.cfg'.format(i))
 
-    # define the number of generations
-    num_generations = 5
-
     # define the bleu of the experiment
     bleu = []
+    time_vec = []
 
     # for each generation
     for generation in range(0, num_generations):
         # for each individual, run the net train
-        bleu_individual = []
+        bleu_generation = []
+        time_generation = []
         for individual in range(0, len(individuals)):
-            model = NNDial('adjust', 'config/NDM{}.cfg'.format(individual))
+            shutil.copyfile('model/CamRest.tracker.model', 'model/CamRest.NDM.model')
+            args = argparse.Namespace(config='config/NDM{}.cfg'.format(individual), mode='adjust')
+            config = args.config
+            time_init = time.time()
+            model = NNDial(config, args)
+            print 'Starting the training of the individual {} of the generation number {}'.format(individual, generation)
             model.trainNet()
-            bleu_individual.append(model.testNet())
+            time_end = time.time()
+            time_total = (time_end - time_init) / 60.0
+            time_generation.append(time_total)
+            args = argparse.Namespace(config='config/NDM{}.cfg'.format(individual), mode='test')
+            config = args.config
+            model = NNDial(config, args)
+            bleu_generation.append(model.testNet())
+            os.remove('model/CamRest.NDM.model')
 
-        # grab the bleu and implement the ga algorithm
-        # grab the time of the train
-        # plot the graphics
+        time_vec.append(time_generation)
+        bleu.append(bleu_generation)
 
-    bleu.append(bleu_individual)
+    print 'time: {} min'.format(time_vec)
+    print 'bleu: {}'.format(bleu)
