@@ -4,16 +4,30 @@
 ######################################################################
 ######################################################################
 import theano
-from math import log10
+import numpy as np
+import os
+import operator
+from math import log, log10, exp, pow
+from copy import deepcopy
+import sys
+import random
 import time
+import itertools
 import pickle as pk
 from ast import literal_eval
 import gc
+
 from nnsds import NNSDS
+
+from utils.tools import setWordVector
+from utils.nlp import normalize
 from utils.bleu import sentence_bleu_4
+
 from loader.DataReader import *
 from loader.GentScorer import *
+
 from ConfigParser import SafeConfigParser
+
 from api.Interact import Interact
 
 theano.gof.compilelock.set_lock_status(False)
@@ -23,12 +37,12 @@ class NNDial(object):
     '''
     Main interface class for the model. This class takes charge of save/load
     hyperparameters from the config file and trained models. It delegates the
-    data preprocessing to DataReader module and delegates the learning to 
+    data preprocessing to DataReader module and delegates the learning to
     NNSDS module. It implements training based on early stopping and testing
     and interactive interfaces.
     '''
     #######################################################################
-    # all variables that needs to be save and load from model file, indexed 
+    # all variables that needs to be save and load from model file, indexed
     # by their names
     #######################################################################
     learn_vars = ['self.lr', 'self.lr_decay', 'self.stop_count', 'self.l2',
@@ -47,20 +61,29 @@ class NNDial(object):
                 'self.req_dimensions', 'self.trk_enc', 'self.trk_wvec_file']
     ply_vars = ['self.policy', 'self.latent']
 
-    def __init__(self, mode, config_file):
+    def __init__(self, config=None, opts=None):
+
+        if config == None and opts == None:
+            print "Please specify command option or config file ..."
+            return
 
         # config parser
         parser = SafeConfigParser()
-        parser.read(config_file)
+        parser.read(config)
 
         # model file name
         self.modelfile = parser.get('file', 'model')
-
         # get current mode from command argument
-        self.mode = mode
-
-        # loading pretrained model
-        self.loadNet(parser, mode)
+        if opts:  self.mode = opts.mode
+        # loading pretrained model if any
+        if os.path.isfile(self.modelfile):
+            if not opts:
+                self.loadNet(parser, None)
+            else:
+                self.loadNet(parser, opts.mode)
+        else:  # init network from scrach
+            self.initNet(config, opts)
+            self.initBackupWeights()
 
     def initNet(self, config, opts=None):
 
@@ -152,7 +175,7 @@ class NNDial(object):
         # logp for validation set
         self.valid_logp = 0.0
 
-        # start setting networks 
+        # start setting networks
         self.ready()
 
     def ready(self):
@@ -238,7 +261,7 @@ class NNDial(object):
                 # this turn features
                 srcfeat_t = srcfeat[t]
 
-                # previous target 
+                # previous target
                 masked_target_tm1, target_tm1, starpos_tm1, vtarpos_tm1, offer = \
                     self.reader.extractSeq(generated_utt_tm1, type='target')
 
@@ -266,7 +289,7 @@ class NNDial(object):
                     masked_intent_t, belief_t, db_degree_t,
                     masked_source_t, masked_target_t, scoreTable)
 
-                # choose venue 
+                # choose venue
                 venues = [i for i, e in enumerate(db_degree_t[:-6]) if e != 0]
                 # keep the current venue
                 if selected_venue in venues:
@@ -309,7 +332,7 @@ class NNDial(object):
                 if '[VALUE_NAME]' in generated_utt and selected_venue != None:
                     venue_offered = self.reader.db2inf[selected_venue]
 
-                ############################### debugging ############################ 
+                ############################### debugging ############################
                 if self.verbose > 0:
                     print 'User Input :\t%s' % source_utt
                     print '           :\t%s' % masked_source_utt
@@ -406,7 +429,7 @@ class NNDial(object):
                     print 'Ground Truth : %s' % masked_target_utt
                     print
                 # raw_input()
-                ############################### debugging ############################ 
+                ############################### debugging ############################
                 generated_utt_tm1 = masked_target_utt
 
                 parallel_corpus.append([generated_utts, [masked_target_utt]])
@@ -419,7 +442,7 @@ class NNDial(object):
                     if set(reqs).issuperset(set(goal[1].nonzero()[0].tolist())):
                         stats['success'] += 1.0
 
-        # bleu score
+        # bleu
         bleu = bscorer.score(best_corpus)
 
         # evaluation result
@@ -482,7 +505,7 @@ class NNDial(object):
         if self.debug:
             print 'start network training ...'
 
-        ######## training with early stopping ######### 
+        ######## training with early stopping #########
         epoch = 0
 
         while True:
@@ -506,7 +529,7 @@ class NNDial(object):
                 success_rewards = [0. for i in range(len(source))]
                 sample = np.array([0 for i in range(len(source))], dtype='int32')
 
-                # set regularization 
+                # set regularization
                 loss, prior_loss, posterior_loss, base_loss, \
                 posterior, sample, reward, baseline, debugs = \
                     self.model.train(
@@ -601,13 +624,13 @@ class NNDial(object):
 
     # sampling dialogue during training to get task success information
     def sampleDialog(self, data):
-        # unzip the dialogue 
+        # unzip the dialogue
         source, source_len, masked_source, masked_source_len, \
         target, target_len, masked_target, masked_target_len, \
         snapshot, change, goal, inf_trk_label, req_trk_label, \
         db_degree, srcfeat, tarfeat, finished, utt_group = data
 
-        # for calculating success: check requestable slots match    
+        # for calculating success: check requestable slots match
         requestables = ['phone', 'address', 'postcode']
         offer_per_turn = []
         request_per_turn = []
@@ -680,7 +703,7 @@ class NNDial(object):
         if self.debug:
             print 'start network RL training ...'
 
-        ######## training with early stopping ######### 
+        ######## training with early stopping #########
         epoch = 0
 
         while True:
@@ -706,7 +729,7 @@ class NNDial(object):
                 # sampling and compute success rate
                 success_rewards, sample, gens = self.sampleDialog(data)
 
-                # set regularization 
+                # set regularization
                 prior_loss, sample, prior = self.model.trainRL(
                     source, target, source_len, target_len,
                     masked_source, masked_target,
@@ -793,7 +816,7 @@ class NNDial(object):
                     self.reader.idx2ent[selected_venue_t])
         else:
             if len(venues) != 0:
-                # random choose from matched venues 
+                # random choose from matched venues
                 selected_venue_t = random.choice(venues)
                 venue_offered_t = random.choice(
                     self.reader.idx2ent[selected_venue_t])
@@ -858,7 +881,7 @@ class NNDial(object):
                     'selected_venue': selected_venue_t,
                     'venue_offered': venue_offered_t}
 
-        ############################### debugging ############################ 
+        ############################### debugging ############################
         print 'User Input :\t%s' % user_utt_t
         if self.trk == 'rnn' and self.trkinf == True:
             print 'Belief Tracker :'
@@ -901,7 +924,7 @@ class NNDial(object):
         print '--------------------------'
         print
 
-        ############################### debugging ############################ 
+        ############################### debugging ############################
         return response
 
     # Interactive interface
@@ -1179,7 +1202,7 @@ class NNDial(object):
                 sidx = self.reader.vocab.index('[SLOT_' + s.upper() + ']')
                 scoreTable[sidx] = score
                 scoreTable[vidx] = score  # reward [VALUE_****] if generate
-        # informable tracker scoreTable 
+        # informable tracker scoreTable
         if self.trk == 'rnn' and self.trkinf == True:
             for i in range(len(self.inf_dimensions) - 1):
                 bn = self.inf_dimensions[i]
@@ -1199,3 +1222,6 @@ class NNDial(object):
                     scoreTable[vidx] = score  # encourage [SLOT_****]
 
         return scoreTable
+
+
+

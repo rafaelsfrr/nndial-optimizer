@@ -10,11 +10,17 @@ from utils.commandparser import NNSDSOptParser
 from nn.NNDialogue import NNDial
 
 import warnings
+import argparse
 warnings.simplefilter("ignore", DeprecationWarning)
 
 if __name__ == '__main__':
     
-    args = NNSDSOptParser()
+    # args = NNSDSOptParser()
+    # print args
+    # config = args.config
+    # print config
+
+    args = argparse.Namespace(config='config/NDM.cfg', mode='test')
     config = args.config
 
     model = NNDial(config,args)
