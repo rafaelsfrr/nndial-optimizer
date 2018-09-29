@@ -13,10 +13,10 @@ if __name__ == '__main__':
     lr, lr_decay, _, _, l2, random_seed, _, _, _, _ = config
 
     # define the number of generations
-    num_generations = 1
+    num_generations = 2
 
     # define the number of individuals
-    num_individuals = 2
+    num_individuals = 8
 
     # define chromosomes
     chromosomes = [float(lr), float(lr_decay), float(l2), int(random_seed)]
@@ -40,6 +40,7 @@ if __name__ == '__main__':
         # for each individual, run the net train
         bleu_generation = []
         time_generation = []
+        print 'Starting the generation {} with the individuals {}'.format(generation, individuals)
         for individual in range(0, len(individuals)):
             util.move_file('model/CamRest.tracker.model', 'model/CamRest.NDM.model')
             args = util.make_args('config/NDM{}.cfg'.format(individual), 'adjust')
@@ -57,8 +58,24 @@ if __name__ == '__main__':
             bleu_generation.append(model.testNet())
             util.remove_file('model/CamRest.NDM.model')
 
+        bleu.append(bleu_generation[:])
+        parents = ga.select_mating_pool(individuals, bleu_generation, 4)
+        print 'Selected parents for the next generation {}'.format(parents)
+        parents = ga.select_mating_pool(individuals, bleu, 4)
+        nindividuals_1 = ga.crossover(parents[0:2], 2)
+        nindividuals_2 = ga.crossover(parents[2:4], 2)
+        nindividuals = list()
+        nindividuals.append(parents[0][:].tolist())
+        nindividuals.append(parents[1].tolist())
+        nindividuals.append(parents[2][:].tolist())
+        nindividuals.append(parents[3][:].tolist())
+        nindividuals.append(nindividuals_1[0][:].tolist())
+        nindividuals.append(nindividuals_1[1][:].tolist())
+        nindividuals.append(nindividuals_2[0][:].tolist())
+        nindividuals.append(nindividuals_2[1][:].tolist())
+        individuals = ga.mutation(nindividuals)
+        print 'Selected individuals for the next generation {}'.format(individuals)
         time_vec.append(time_generation)
-        bleu.append(bleu_generation)
 
     print 'time: {} min'.format(time_vec)
     print 'bleu: {}'.format(bleu)
