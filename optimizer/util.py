@@ -3,6 +3,7 @@ import shutil
 import os
 import argparse
 
+
 def load_config_file(path, section):
     """
     :param path: the path of the config file to be loaded
@@ -59,3 +60,18 @@ def make_args(config, mode):
     """
 
     return argparse.Namespace(config=config, mode=mode)
+
+
+def format_args(args):
+    """
+    :param args: the args to be formated
+    :return: the args formated
+    """
+
+    args_formated = list()
+    args_formated.append(round(args[0], 3))
+    args_formated.append(round(args[1], 2))
+    args_formated.append(round(args[2], 5))
+    args_formated.append(int(args[3]))
+
+    return args_formated
