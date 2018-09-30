@@ -3,7 +3,8 @@ numpy
 scipy
 nltk
 simplejson
-deap
 nose
 configparser
-nb_conda
+pygpu
+mkl-service
+libgpuarray
