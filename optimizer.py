@@ -61,7 +61,6 @@ if __name__ == '__main__':
         bleu.append(bleu_generation[:])
         parents = ga.select_mating_pool(individuals, bleu_generation, 4)
         print 'Selected parents for the next generation {}'.format(parents)
-        parents = ga.select_mating_pool(individuals, bleu_generation, 4)
         nindividuals_1 = ga.crossover(parents[0:2], 2)
         nindividuals_2 = ga.crossover(parents[2:4], 2)
         nindividuals = list()
@@ -76,6 +75,8 @@ if __name__ == '__main__':
         individuals = ga.mutation(nindividuals)
         print 'Selected individuals for the next generation {}'.format(individuals)
         time_vec.append(time_generation)
+        print 'time after {} generations: {} min'.format(num_generations, time_vec)
+        print 'bleu after {} generations: {}'.format(num_generations, bleu)
 
-    print 'time: {} min'.format(time_vec)
-    print 'bleu: {}'.format(bleu)
+    print 'time final: {} min'.format(time_vec)
+    print 'bleu final: {}'.format(bleu)
