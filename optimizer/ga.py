@@ -1,5 +1,6 @@
 import numpy
 import copy
+import time
 
 
 def init(num_individuals, chromosomes, limits):
@@ -10,6 +11,7 @@ def init(num_individuals, chromosomes, limits):
     :return: a matrix representing the individuals
     """
 
+    numpy.random.seed(seed=int(time.time()))
     individuals = []
     for i in range(0, num_individuals):
         individual = []
@@ -59,6 +61,7 @@ def mutation(offspring_crossover):
     :return: the new population with a gene of each individual mutated
     """
 
+    numpy.random.seed(seed=int(time.time()))
     # define chromosomes limits
     limits = [[-0.0008, 0.0008], [-0.05, 0.05], [0, 0.0001], [1, 5]]
     # Mutation changes a single gene in each offspring randomly.

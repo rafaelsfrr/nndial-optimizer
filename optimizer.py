@@ -13,10 +13,10 @@ if __name__ == '__main__':
     lr, lr_decay, _, _, l2, random_seed, _, _, _, _ = config
 
     # define the number of generations
-    num_generations = 2
+    num_generations = 15
 
     # define the number of individuals
-    num_individuals = 4
+    num_individuals = 8
 
     # define chromosomes
     chromosomes = [float(lr), float(lr_decay), float(l2), int(random_seed)]
@@ -63,28 +63,33 @@ if __name__ == '__main__':
             model = NNDial(config, args)
             # save the bleu
             bleu_generation.append(model.testNet())
+            # remove the old net file
             util.remove_file('model/CamRest.NDM.model')
 
+        # save the generation bleu
         bleu.append(bleu_generation[:])
+        # select the fittest parents
         parents = ga.select_mating_pool(individuals, bleu_generation, num_individuals/2)
         print 'Selected parents for the next generation {}'.format(parents)
+        # make the child invidivuals
         nindividuals_1 = ga.crossover(parents[0:len(parents)/2], len(parents)/2)
-        # nindividuals_2 = ga.crossover(parents[len(parents)/2:len(parents)], len(parents)/2)
+        nindividuals_2 = ga.crossover(parents[len(parents)/2:len(parents)], len(parents)/2)
+        # make the next generation
         nindividuals = list()
-        nindividuals.append(parents[0][:].tolist())
-        nindividuals.append(parents[1].tolist())
-        # nindividuals.append(parents[2][:].tolist())
-        # nindividuals.append(parents[3][:].tolist())
-        nindividuals.append(nindividuals_1[0][:].tolist())
-        # nindividuals.append(nindividuals_1[1][:].tolist())
-        # nindividuals.append(nindividuals_2[0][:].tolist())
-        # nindividuals.append(nindividuals_2[1][:].tolist())
+        for i in range(0, len(parents)):
+            nindividuals.append(parents[i][:].tolist())
+        for i in range(0, len(nindividuals_1)):
+            nindividuals.append(nindividuals_1[i][:].tolist())
+            nindividuals.append(nindividuals_2[i][:].tolist())
         individuals = nindividuals[:]
-        inviduals = ga.mutation(inviduals)
+        individuals = ga.mutation(individuals)
         print 'Selected individuals for the next generation {}'.format(individuals)
         time_vec.append(time_generation)
         print 'time after {} generations: {} min'.format(generation, time_vec)
         print 'bleu after {} generations: {}'.format(generation, bleu)
+        # save the config file for the generation
+        for i in range(0, len(individuals)):
+            util.write_config_file(individuals[i], 'config/NDM{}.cfg'.format(i))
 
     print 'time final: {} min'.format(time_vec)
     print 'bleu final: {}'.format(bleu)
