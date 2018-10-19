@@ -1,4 +1,4 @@
-# nndial-optmizer
+# nndial-opitmizer
 
 The source code of an optimizer developed with a adapted Evolutionary Algorithm for the NNDIAL chatbot. The NNDIAL chatbot can be found at https://github.com/shawnwun/NNDIAL. This code is also under Apache License 2.0.
 
